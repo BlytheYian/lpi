@@ -65,10 +65,10 @@ def read_csv_auto_encoding(file_path):
                     
                     possible_id_cols = ['user_sn', 'UserSN', 'sn', 'id', 'user_id', '學號']
                     if any(col.lower() in [c.lower() for c in possible_id_cols] for col in df.columns):
-                        print(f"✅ 成功讀取 (編碼: {enc}, Sep: {repr(sep)}, Quote: {quote_mode}): {os.path.basename(file_path)}")
+                        print(f"成功讀取 (編碼: {enc}, Sep: {repr(sep)}, Quote: {quote_mode}): {os.path.basename(file_path)}")
                         return df, None
                     if len(df.columns) > 1:
-                         print(f"✅ 勉強讀取 (編碼: {enc}, Sep: {repr(sep)}): {os.path.basename(file_path)}")
+                         print(f"勉強讀取 (編碼: {enc}, Sep: {repr(sep)}): {os.path.basename(file_path)}")
                          return df, None
 
                 except Exception:
@@ -78,7 +78,7 @@ def read_csv_auto_encoding(file_path):
 
 def load_target_data(file_log, file_user):
     if file_log is None or file_user is None:
-        return None, None, "⚠️ 檔案未上傳完整"
+        return None, None, "檔案未上傳完整"
 
     df_log, err_log = read_csv_auto_encoding(file_log.name)
     if err_log: return None, None, f"行為日誌讀取失敗: {err_log}"
@@ -90,12 +90,12 @@ def load_target_data(file_log, file_user):
     df_log.columns = [c.strip() for c in df_log.columns]
 
     if 'user_sn' not in df_user.columns:
-        return None, None, f"❌ 成績單缺少 'user_sn' 欄位。\n偵測到的欄位: {list(df_user.columns)}"
+        return None, None, f"成績單缺少 'user_sn' 欄位。\n偵測到的欄位: {list(df_user.columns)}"
     if 'user_sn' not in df_log.columns:
         if 'user_id' in df_log.columns:
             df_log.rename(columns={'user_id': 'user_sn'}, inplace=True)
         else:
-            return None, None, f"❌ 行為日誌缺少 'user_sn' 欄位。\n偵測到的欄位: {list(df_log.columns)}"
+            return None, None, f"行為日誌缺少 'user_sn' 欄位。\n偵測到的欄位: {list(df_log.columns)}"
 
     for df in [df_log, df_user]:
         for col in df.columns:
@@ -156,7 +156,7 @@ def process_and_analyze(t_file_log, t_file_user, b_file_csv, manual_score_thresh
             combined_features = pd.concat([t_features, b_features_clean], ignore_index=True)
             status_msg = f"分析模式：【菁英常模參照】(Baseline: {len(b_features)}筆)"
         else:
-            return f"⚠️ {b_err}", None, None, None
+            return f"{b_err}", None, None, None
 
     combined_features['PR_Intensity'] = combined_features['total_actions'].rank(pct=True)
     combined_features['PR_Coverage'] = combined_features['unique_videos'].rank(pct=True)
@@ -179,13 +179,13 @@ def process_and_analyze(t_file_log, t_file_user, b_file_csv, manual_score_thresh
     
     missing_cols = [col for col in score_cols if col not in t_user.columns]
     if missing_cols:
-        return f"❌ 成績單缺少欄位: {missing_cols}", None, None, None
+        return f"成績單缺少欄位: {missing_cols}", None, None, None
 
     df_final = pd.merge(target_lpi, t_user[['user_sn'] + score_cols], on='user_sn', how='inner')
     df_final['Avg_Score'] = df_final[score_cols].mean(axis=1)
     
     if len(df_final) == 0:
-        return "❌ 錯誤：ID 匹配後無資料，請確認 user_sn 是否一致。", None, None, None
+        return "錯誤：ID 匹配後無資料，請確認 user_sn 是否一致。", None, None, None
 
     # 象限劃分
     LPI_MID = combined_features['LPI_Score'].median()
@@ -229,15 +229,15 @@ def process_and_analyze(t_file_log, t_file_user, b_file_csv, manual_score_thresh
     plt.tight_layout()
 
     q4_count = counts.get('Q4: 策略引導區 (高投低產)', 0)
-    summary = (f"✅ {status_msg}\n📊 門檻: LPI {LPI_MID:.1f} / 成績 {SCORE_MID:.1f}\n"
-               f"👥 分析人數: {len(df_final)}\n⚠️ Q4 關注: {q4_count} 人")
+    summary = (f" {status_msg}\n📊 門檻: LPI {LPI_MID:.1f} / 成績 {SCORE_MID:.1f}\n"
+               f"分析人數: {len(df_final)}\n⚠️ Q4 關注: {q4_count} 人")
     
     return summary, fig_scatter, fig_pie, out_csv
 
 # --- Gradio ---
 css = "footer {display: none !important;}"
 with gr.Blocks(title="LPI 學習診斷系統", css=css) as app:
-    gr.Markdown("# 🎓 LPI 學習潛能診斷系統 (Pro+)")
+    gr.Markdown("# LPI 學習潛能診斷系統 (Pro+)")
     with gr.Row(variant="panel"):
         with gr.Column():
             t_file1 = gr.File(label="行為日誌 (review.csv)")
@@ -246,7 +246,7 @@ with gr.Blocks(title="LPI 學習診斷系統", css=css) as app:
             b_file = gr.File(label="基準檔 (elite_baseline.csv)")
             use_manual = gr.Checkbox(label="自訂成績門檻")
             score_threshold = gr.Number(label="分數線", value=60)
-            btn = gr.Button("🚀 執行診斷", variant="primary")
+            btn = gr.Button(" 執行診斷", variant="primary")
             
     with gr.Row():
         out_text = gr.Textbox(label="摘要", lines=5)
@@ -259,4 +259,5 @@ with gr.Blocks(title="LPI 學習診斷系統", css=css) as app:
               outputs=[out_text, plot_scatter, plot_pie, out_file])
 
 if __name__ == "__main__":
+
     app.launch()
